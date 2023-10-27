@@ -15,34 +15,25 @@ def get_sours(url):
     return soup
 
 
-def get_news_list(soup, search_word):
-    news_list = soup.find_all("a", href=lambda href: href and search_word in href)
-    for news in news_list:
-        title = news.find('p').text
-        print(title)
-        url = news['href']
-        print(url)
-
-
 def get_title(soup, search_word):
+    add_url = 'https://www.paritetbank.by'
     news_list = soup.find_all("a", href=lambda href: href and search_word in href)
     result = {}
     for news in news_list:
         title = news.find('p').text
-        url = news['href']
+        url = add_url + news['href']
         result[title] = url
     return result
 
 
 def duplicate_checking(data):
-    add_url = 'https://www.paritetbank.by'
     result_list = dict()
     conn = sqlite3.connect(DATABASE_NAME)
     cursor = conn.cursor()
     for i in data:
 
         title = i
-        url = add_url + data[i]
+        url = data[i]
 
         # Проверка наличия записи в базе данных
         cursor.execute("SELECT * FROM news WHERE url = ?", (url,))
@@ -66,12 +57,6 @@ def scrap():
     soup = get_sours(url)
     news = get_title(soup, search_word)
     return duplicate_checking(news)
-    # d = {
-    #     "Title 1": "https://example.com/url1",
-    #     "Title 2": "https://example.com/url2",
-    #     "Title 3": "https://example.com/url3"
-    # }
-    # return d
 
 
 if __name__ == '__main__':

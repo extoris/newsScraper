@@ -13,6 +13,7 @@ from aiogram.utils.markdown import hbold, link
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from scraper import scrap
+from scrap_redit import scrap as scrap_reddit
 
 
 dp = Dispatcher()
@@ -29,7 +30,7 @@ async def command_start_handler(message: Message) -> None:
     await message.answer(f"Hello, {hbold(message.from_user.full_name)}!")
 
 
-@dp.message(Command('find'))
+@dp.message(Command('find_news'))
 async def command_find_handler(message: Message) -> None:
     answer = scrap()
     if answer is not None:
@@ -39,7 +40,7 @@ async def command_find_handler(message: Message) -> None:
         await message.answer('нет новостей')
 
 
-async def start_scrap(bot: Bot):
+async def start_scrap_bank(bot: Bot):
     answer = scrap()
     if answer is not None:
         for i in answer:
@@ -47,9 +48,29 @@ async def start_scrap(bot: Bot):
             await bot.send_message(ADMIN, news_link)
 
 
+@dp.message(Command('find_codes'))
+async def command_find_handler(message: Message) -> None:
+    answer = scrap_reddit()
+    if answer is not None:
+        for i in answer:
+            news_link = f'{i}: {i}'
+            await message.answer(news_link)
+    else:
+        await message.answer('нет новостей')
+
+
+async def start_scrap_reddit(bot: Bot):
+    answer = scrap_reddit()
+    if answer is not None:
+        for i in answer:
+            news_link = f'{i}: {i}'
+            await bot.send_message(ADMIN, news_link)
+
+
 async def set_commands(bot: Bot):
     commands = [
-        BotCommand(command="/find", description="Искать")
+        BotCommand(command="/find_news", description="Искать комбо дни"),
+        BotCommand(command="/find_codes", description="Искать коды"),
     ]
     await bot.set_my_commands(commands)
 
@@ -61,8 +82,10 @@ async def main() -> None:
 
     await set_commands(bot)
 
-    scheduler.add_job(start_scrap, 'cron', hour=8, minute=00, kwargs={'bot': bot})
-    scheduler.add_job(start_scrap, 'cron', hour=18, minute=00, kwargs={'bot': bot})
+    scheduler.add_job(start_scrap_bank, 'cron', hour=8, minute=00, kwargs={'bot': bot})
+    scheduler.add_job(start_scrap_reddit, 'cron', hour=8, minute=00, kwargs={'bot': bot})
+    scheduler.add_job(start_scrap_bank, 'cron', hour=18, minute=00, kwargs={'bot': bot})
+    scheduler.add_job(start_scrap_reddit, 'cron', hour=18, minute=00, kwargs={'bot': bot})
     scheduler.start()
 
     # And the run events dispatching
